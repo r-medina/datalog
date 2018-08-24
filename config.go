@@ -19,10 +19,13 @@ type Config struct {
 	L *log.Logger
 }
 
-// DefaultConfig contains sane defaults for D.
-var DefaultConfig = Config{
-	Fname:            "/var/log/access.log",
-	ReportInterval:   10 * time.Second,
-	TrafficInterval:  2 * time.Minute,
-	TrafficThreshold: 10,
+// DefaultConfig contains sane defaults for D. This is instantiated in this way
+// so that it is copied and callers cannot tamper with it accidentally.
+func DefaultConfig() Config {
+	return Config{
+		Fname:            "/var/log/access.log",
+		ReportInterval:   10 * time.Second,
+		TrafficInterval:  2 * time.Minute,
+		TrafficThreshold: 10,
+	}
 }

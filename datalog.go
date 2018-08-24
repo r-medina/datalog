@@ -25,9 +25,9 @@ type D struct {
 // All values are initialized to `DefaultConfig`.
 func NewD(opts ...Option) *D {
 	d := &D{
-		config: DefaultConfig,
+		config: DefaultConfig(),
 		data:   newData(),
-		stopCh: make(chan struct{}, 1),
+		stopCh: make(chan struct{}),
 	}
 	for _, opt := range opts {
 		opt(d)
@@ -104,8 +104,9 @@ func (d *D) Start() error {
 	}
 }
 
+// stop allows the caller to stop the `Start` function. This exists only for testing.
 func (d *D) stop() {
-	d.stopCh <- struct{}{}
+	close(d.stopCh)
 }
 
 func (d *D) processLine(line string) error {

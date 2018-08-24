@@ -18,7 +18,7 @@ var config = struct {
 
 	pprofAddr *net.TCPAddr
 }{
-	Config: datalog.DefaultConfig,
+	Config: datalog.DefaultConfig(),
 }
 
 var (

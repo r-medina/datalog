@@ -18,14 +18,18 @@ func TestAlert(t *testing.T) {
 	tests := []struct {
 		threshold uint64
 		many      int
-		post      func(*D)
+		post      func(*D, *sync.Mutex)
 	}{
 		{threshold: 5, many: 10},
 		{threshold: 5, many: 2},
-		{threshold: 5, many: 2, post: func(d *D) {
+		{threshold: 5, many: 20, post: func(d *D, mtx *sync.Mutex) {
 			time.Sleep(2*interval + 1*time.Millisecond)
 
+			d.stop()
+
+			mtx.Lock()
 			assert.False(t, d.wasHigh, "expected alert to have gone away")
+			mtx.Unlock()
 		}},
 	}
 
@@ -46,7 +50,7 @@ func TestAlert(t *testing.T) {
 
 			// configure the service
 
-			config := DefaultConfig
+			config := DefaultConfig()
 			config.Fname = f.Name()
 			config.TrafficInterval = interval
 			config.TrafficThreshold = test.threshold
@@ -71,6 +75,13 @@ func TestAlert(t *testing.T) {
 				err = f.Sync()
 				assert.NoError(t, err)
 			}
+			if test.post != nil {
+				// run function that tests if alert went away
+
+				test.post(d, &mtx)
+				return
+			}
+
 			d.stop()
 			time.Sleep(50 * time.Millisecond)
 
@@ -80,12 +91,6 @@ func TestAlert(t *testing.T) {
 			// alert when we generated more traffic than threshold
 			assert.Equal(t, uint64(test.many) > test.threshold, d.wasHigh)
 			mtx.Unlock()
-
-			// run function that tests if alert went away
-
-			if test.post != nil {
-				test.post(d)
-			}
 		})
 	}
 }
